@@ -1,0 +1,82 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: 0;
+  background-color: transparent;
+  font-family: "Roboto", sans-serif;
+  font-size: 1rem;
+}
+button:hover {
+  cursor: pointer;
+}
+input:focus,
+textarea:focus {
+  outline: none;
+}
+h1 {
+  font-size: 3rem;
+}
+h2 {
+  font-size: 2rem;
+}
+h3 {
+  font-size: 1.5rem;
+}
+
+body {
+  position: relative;
+}
+header,
+menu {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 1rem;
+}
+#add-product-form {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  padding-top: 6rem;
+  display: flex;
+  /* display: none; */
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+#product-form {
+  width: 30rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+#product-form input,
+#product-form textarea {
+  padding: 0.5rem;
+  border: 0.1rem solid black;
+}
+
+#dashboard {
+  table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  td,
+  th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+
+  tr:nth-child(even) {
+    background-color: #dddddd;
+  }
+}

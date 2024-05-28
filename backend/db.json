@@ -1,0 +1,100 @@
+{
+  "products": [
+    {
+      "id": "263d",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 61000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "aa84",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 45000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "3de4",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 51000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "70b0",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 51000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "c42b",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 51000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "3dbc",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 52000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "d53c",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 51000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "9757",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 51000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "3a49",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 100000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "ac0c",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 51000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "4a19",
+      "name": "ASUS X415EA",
+      "description": "Intel Core i5 11th Gen - (24 GB/1 TB SSD/Windows 11 Pro) X415EA-EK503T Thin and Light Laptop",
+      "category": "Laptop",
+      "price": 51000,
+      "imageUrl": "assets/close_black.svg"
+    },
+    {
+      "id": "b48d",
+      "name": "",
+      "description": "",
+      "category": "",
+      "price": null,
+      "imageUrl": ""
+    }
+  ]
+}
