@@ -180,9 +180,14 @@ header a {
   display: grid;
   gap: 1rem;
 }
-.product > button {
+.product > button:first-child {
   position: absolute;
   left: 2rem;
+}
+.add-cart-button {
+  background-color: #e07e1b;
+  padding: 0.5rem 1rem;
+  width: 100%;
 }
 .product > img {
   width: auto;
@@ -207,6 +212,44 @@ header a {
   background-color: rgba(185, 17, 17, 1);
   color: white;
   padding: 1rem 0.5rem;
+}
+.cart-product button {
+  padding: 0.2rem 1rem;
+  background-color: #e07e1b;
+}
+.cart-product button:first-child {
+  background-color: rgba(185, 17, 17, 0.8);
+}
+.cart-product > div:first-child {
+  display: flex;
+  gap: 1rem;
+}
+.cart-product > div:first-child > img {
+  width: auto;
+  height: 8rem;
+}
+.cart-product > div:last-child {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.cart-product > div:last-child > div {
+  display: flex;
+  gap: 1rem;
+}
+.cart-checkout {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 4rem;
+}
+.cart-modify {
+  display: flex;
+  gap: 1rem;
+}
+.cart-modify button {
+  padding: 0.2rem 1rem;
+  background-color: #e07e1b;
 }
 
 @media (max-width: 768px) {

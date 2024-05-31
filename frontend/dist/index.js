@@ -1,10 +1,12 @@
 "use strict";
+const header = document.querySelector("header");
 const dashboardBtn = document.querySelector("#dashboard-button");
 const homeBtn = document.querySelector("#home-button");
+const cartBtn = document.querySelector("#cart-button");
+const showSearch = document.querySelector("#show-search");
 const dashboard = document.querySelector("#dashboard");
 const home = document.querySelector("#home");
-const header = document.querySelector("header");
-const showSearch = document.querySelector("#show-search");
+const cartSection = document.querySelector("#cart");
 let display = localStorage.getItem("display");
 let feedback = localStorage.getItem("feedback");
 if (!display) {
@@ -76,6 +78,109 @@ class Products {
         this.products = this.allProducts.filter((product) => {
             return product.name.toLowerCase().includes(search.toLowerCase());
         });
+    }
+}
+class Cart {
+    cartProducts;
+    constructor() {
+        this.cartProducts = [];
+    }
+    async getProducts() {
+        const response = await fetch("http://localhost:3000/cart");
+        this.cartProducts = await response.json();
+        return this.cartProducts;
+    }
+    async checkExists(id) {
+        await this.getProducts();
+        const cartProduct = this.cartProducts.find((cartProduct) => cartProduct.productId === id);
+        if (cartProduct) {
+            return cartProduct;
+        }
+        return false;
+    }
+    async addProduct(product) {
+        try {
+            const cartProduct = {
+                productId: product.id,
+                quantity: 1,
+                name: product.name,
+                description: product.description,
+                category: product.category,
+                price: product.price,
+                imageUrl: product.imageUrl,
+            };
+            await fetch("http://localhost:3000/cart", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(cartProduct),
+            });
+            localStorage.setItem("feedback", "Product successfully added to cart");
+            return true;
+        }
+        catch (error) {
+            return false;
+        }
+    }
+    async incrementProduct(id) {
+        await this.getProducts();
+        const cartItem = this.cartProducts.find((cartProduct) => cartProduct.productId === id);
+        if (!cartItem) {
+            return false;
+        }
+        cartItem.quantity += 1;
+        try {
+            await fetch("http://localhost:3000/cart/" + cartItem.id, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(cartItem),
+            });
+            localStorage.setItem("feedback", "Product quantity successfully increased");
+            return true;
+        }
+        catch (error) {
+            return false;
+        }
+    }
+    async decrementProduct(id) {
+        await this.getProducts();
+        const cartItem = this.cartProducts.find((cartProduct) => cartProduct.productId === id);
+        if (!cartItem) {
+            return false;
+        }
+        if (cartItem.quantity === 1) {
+            return this.removeProduct(cartItem.id);
+        }
+        cartItem.quantity -= 1;
+        try {
+            await fetch("http://localhost:3000/cart/" + cartItem.id, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(cartItem),
+            });
+            localStorage.setItem("feedback", "Product quantity successfully decreased");
+            return true;
+        }
+        catch (error) {
+            return false;
+        }
+    }
+    async removeProduct(id) {
+        try {
+            await fetch("http://localhost:3000/cart/" + id, {
+                method: "DELETE",
+            });
+            localStorage.setItem("feedback", "Product successfully removed from cart");
+            return true;
+        }
+        catch (error) {
+            return true;
+        }
     }
 }
 const createSearchForm = () => {
@@ -338,7 +443,7 @@ const showDashBoard = async () => {
     dashboard?.appendChild(div);
     createManageProductTable(productList);
 };
-const showProduct = (product) => {
+const showProduct = async (product) => {
     while (home?.firstElementChild) {
         home.removeChild(home.firstElementChild);
     }
@@ -350,6 +455,7 @@ const showProduct = (product) => {
     const name = document.createElement("h2");
     const price = document.createElement("h3");
     const category = document.createElement("h4");
+    const cartDiv = document.createElement("button");
     const description = document.createElement("p");
     div.setAttribute("class", "product");
     backImg.setAttribute("src", "assets/arrow_left.svg");
@@ -365,12 +471,59 @@ const showProduct = (product) => {
         }
         showHome();
     });
+    const cart = new Cart();
+    const cartProduct = await cart.checkExists(product.id);
+    if (!cartProduct) {
+        const cartButton = document.createElement("button");
+        cartButton.setAttribute("class", "add-cart-button");
+        cartButton.textContent = "Add to Cart";
+        cartButton.addEventListener("click", async () => {
+            const result = await cart.addProduct(product);
+            if (result) {
+                const feedbackDiv = document.createElement("div");
+                const feedbackText = document.createElement("p");
+                feedbackDiv.setAttribute("class", "feedback");
+                feedbackText.textContent = "Product successfully added to cart";
+                feedbackDiv.appendChild(feedbackText);
+                header?.appendChild(feedbackDiv);
+                setTimeout(() => {
+                    header?.removeChild(feedbackDiv);
+                }, 2000);
+            }
+        });
+        cartDiv.appendChild(cartButton);
+    }
+    else {
+        const cartAddBtn = document.createElement("button");
+        const cartSubBtn = document.createElement("button");
+        const quantity = document.createElement("h4");
+        cartDiv.setAttribute("class", "cart-modify");
+        cartAddBtn.textContent = "+";
+        cartSubBtn.textContent = "-";
+        quantity.textContent = cartProduct.quantity.toString();
+        cartAddBtn.addEventListener("click", async () => {
+            const result = await cart.incrementProduct(cartProduct.productId);
+            if (result) {
+                quantity.textContent = (cartProduct.quantity + 1).toString();
+            }
+        });
+        cartSubBtn.addEventListener("click", async () => {
+            const result = await cart.decrementProduct(cartProduct.productId);
+            if (result) {
+                quantity.textContent = (cartProduct.quantity - 1).toString();
+            }
+        });
+        cartDiv.appendChild(cartSubBtn);
+        cartDiv.appendChild(quantity);
+        cartDiv.appendChild(cartAddBtn);
+    }
     backBtn.appendChild(backImg);
     div.appendChild(backBtn);
     div.appendChild(image);
     div.appendChild(name);
     div.appendChild(price);
     div.appendChild(category);
+    div.appendChild(cartDiv);
     div.appendChild(description);
     home?.appendChild(div);
 };
@@ -410,6 +563,86 @@ const showProducts = async () => {
     });
     home?.appendChild(productsDiv);
 };
+const createCartProductCard = (product) => {
+    const div = document.createElement("div");
+    const details = document.createElement("div");
+    const image = document.createElement("img");
+    const name = document.createElement("h2");
+    const price = document.createElement("h3");
+    const actions = document.createElement("div");
+    const removeBtn = document.createElement("button");
+    const quantity = document.createElement("h4");
+    const modQuantity = document.createElement("div");
+    const addBtn = document.createElement("button");
+    const subBtn = document.createElement("button");
+    div.setAttribute("class", "cart-product");
+    image.setAttribute("src", product.imageUrl);
+    image.setAttribute("alt", product.name);
+    name.textContent = product.name;
+    price.textContent = "Ksh. " + product.price.toString();
+    quantity.textContent = product.quantity.toString();
+    addBtn.textContent = "+";
+    subBtn.textContent = "-";
+    removeBtn.textContent = "Remove";
+    addBtn.addEventListener("click", async () => {
+        const cart = new Cart();
+        const result = await cart.incrementProduct(product.productId);
+        if (result) {
+            quantity.textContent = (product.quantity + 1).toString();
+        }
+    });
+    subBtn.addEventListener("click", async () => {
+        const cart = new Cart();
+        const result = await cart.decrementProduct(product.productId);
+        console.log(result);
+        if (result) {
+            quantity.textContent = (product.quantity - 1).toString();
+        }
+    });
+    removeBtn.addEventListener("click", async () => {
+        const cart = new Cart();
+        const result = await cart.removeProduct(product.id);
+    });
+    modQuantity.appendChild(subBtn);
+    modQuantity.appendChild(quantity);
+    modQuantity.appendChild(addBtn);
+    details.appendChild(image);
+    details.appendChild(name);
+    details.appendChild(price);
+    actions.appendChild(removeBtn);
+    actions.appendChild(modQuantity);
+    div.appendChild(details);
+    div.appendChild(actions);
+    return div;
+};
+const createCartCheckout = (products) => {
+    const div = document.createElement("div");
+    const labeTotal = document.createElement("h2");
+    const total = document.createElement("h2");
+    div.setAttribute("class", "cart-checkout");
+    labeTotal.textContent = "Total:";
+    total.textContent =
+        "Ksh. " +
+            products
+                .reduce((acc, curr) => acc + curr.price * curr.quantity, 0)
+                .toString();
+    div.appendChild(labeTotal);
+    div.appendChild(total);
+    return div;
+};
+const showCart = async () => {
+    const cart = new Cart();
+    const products = await cart.getProducts();
+    while (cartSection?.firstElementChild) {
+        cartSection.removeChild(cartSection.firstElementChild);
+    }
+    products.forEach((product) => {
+        const cartProduct = createCartProductCard(product);
+        cartSection?.appendChild(cartProduct);
+    });
+    const cartCheckout = createCartCheckout(products);
+    cartSection?.appendChild(cartCheckout);
+};
 const showHome = async () => {
     await showProducts();
 };
@@ -422,6 +655,9 @@ homeBtn?.addEventListener("click", () => {
     while (dashboard?.firstElementChild) {
         dashboard.removeChild(dashboard.firstElementChild);
     }
+    while (cartSection?.firstElementChild) {
+        cartSection.removeChild(cartSection.firstElementChild);
+    }
     showHome();
 });
 dashboardBtn?.addEventListener("click", () => {
@@ -433,13 +669,33 @@ dashboardBtn?.addEventListener("click", () => {
     while (home?.firstElementChild) {
         home.removeChild(home.firstElementChild);
     }
+    while (cartSection?.firstElementChild) {
+        cartSection.removeChild(cartSection.firstElementChild);
+    }
     showDashBoard();
+});
+cartBtn?.addEventListener("click", () => {
+    if (display === "cart") {
+        return;
+    }
+    display = "cart";
+    localStorage.setItem("display", display);
+    while (home?.firstElementChild) {
+        home.removeChild(home.firstElementChild);
+    }
+    while (dashboard?.firstElementChild) {
+        dashboard.removeChild(dashboard.firstElementChild);
+    }
+    showCart();
 });
 if (display === "dashboard") {
     showDashBoard();
 }
 else if (display === "home") {
     showHome();
+}
+else if (display === "cart") {
+    showCart();
 }
 const showFeedback = async () => {
     setTimeout(() => {

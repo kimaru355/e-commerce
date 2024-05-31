@@ -1,9 +1,11 @@
+const header = document.querySelector("header");
 const dashboardBtn = document.querySelector("#dashboard-button");
 const homeBtn = document.querySelector("#home-button");
+const cartBtn = document.querySelector("#cart-button");
+const showSearch = document.querySelector("#show-search");
 const dashboard = document.querySelector("#dashboard");
 const home = document.querySelector("#home");
-const header = document.querySelector("header");
-const showSearch = document.querySelector("#show-search");
+const cartSection = document.querySelector("#cart");
 
 let display: string | null = localStorage.getItem("display");
 let feedback: string | null = localStorage.getItem("feedback");
@@ -28,6 +30,25 @@ interface ProductsModel {
   addProduct: (product: ProductModel) => Promise<boolean>;
   updateProduct: (product: ProductModel) => Promise<boolean>;
   deleteProduct: (productId: string) => Promise<boolean>;
+}
+interface CartProductModel {
+  id?: string;
+  productId: string;
+  quantity: number;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  imageUrl: string;
+}
+interface CartProductsModel {
+  cartProducts: Array<CartProductModel>;
+  getProducts: () => Promise<Array<CartProductModel>>;
+  checkExists: (id: string) => Promise<CartProductModel | false>;
+  addProduct: (product: ProductModel) => Promise<boolean>;
+  incrementProduct: (id: string) => Promise<boolean>;
+  decrementProduct: (id: string) => Promise<boolean>;
+  removeProduct: (id: string) => Promise<boolean>;
 }
 
 class Products implements ProductsModel {
@@ -97,6 +118,127 @@ class Products implements ProductsModel {
     this.products = this.allProducts.filter((product) => {
       return product.name.toLowerCase().includes(search.toLowerCase());
     });
+  }
+}
+
+class Cart implements CartProductsModel {
+  cartProducts: Array<CartProductModel>;
+  constructor() {
+    this.cartProducts = [];
+  }
+
+  async getProducts(): Promise<Array<CartProductModel>> {
+    const response = await fetch("http://localhost:3000/cart");
+    this.cartProducts = await response.json();
+    return this.cartProducts;
+  }
+
+  async checkExists(id: string): Promise<CartProductModel | false> {
+    await this.getProducts();
+    const cartProduct = this.cartProducts.find(
+      (cartProduct) => cartProduct.productId === id
+    );
+    if (cartProduct) {
+      return cartProduct;
+    }
+    return false;
+  }
+
+  async addProduct(product: ProductModel): Promise<boolean> {
+    try {
+      const cartProduct: CartProductModel = {
+        productId: product.id!,
+        quantity: 1,
+        name: product.name,
+        description: product.description,
+        category: product.category,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      };
+      await fetch("http://localhost:3000/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cartProduct),
+      });
+      localStorage.setItem("feedback", "Product successfully added to cart");
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async incrementProduct(id: string): Promise<boolean> {
+    await this.getProducts();
+    const cartItem = this.cartProducts.find(
+      (cartProduct) => cartProduct.productId === id
+    );
+    if (!cartItem) {
+      return false;
+    }
+    cartItem.quantity += 1;
+    try {
+      await fetch("http://localhost:3000/cart/" + cartItem.id, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cartItem),
+      });
+      localStorage.setItem(
+        "feedback",
+        "Product quantity successfully increased"
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async decrementProduct(id: string): Promise<boolean> {
+    await this.getProducts();
+    const cartItem = this.cartProducts.find(
+      (cartProduct) => cartProduct.productId === id
+    );
+    if (!cartItem) {
+      return false;
+    }
+    if (cartItem.quantity === 1) {
+      return this.removeProduct(cartItem.id!);
+    }
+    cartItem.quantity -= 1;
+    try {
+      await fetch("http://localhost:3000/cart/" + cartItem.id, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cartItem),
+      });
+      localStorage.setItem(
+        "feedback",
+        "Product quantity successfully decreased"
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async removeProduct(id: string): Promise<boolean> {
+    try {
+      await fetch("http://localhost:3000/cart/" + id, {
+        method: "DELETE",
+      });
+      localStorage.setItem(
+        "feedback",
+        "Product successfully removed from cart"
+      );
+      return true;
+    } catch (error) {
+      return true;
+    }
   }
 }
 
@@ -395,7 +537,7 @@ const showDashBoard = async () => {
   createManageProductTable(productList);
 };
 
-const showProduct = (product: ProductModel) => {
+const showProduct = async (product: ProductModel) => {
   while (home?.firstElementChild) {
     home.removeChild(home.firstElementChild);
   }
@@ -408,6 +550,7 @@ const showProduct = (product: ProductModel) => {
   const name = document.createElement("h2") as HTMLHeadingElement;
   const price = document.createElement("h3") as HTMLHeadingElement;
   const category = document.createElement("h4") as HTMLHeadingElement;
+  const cartDiv = document.createElement("button") as HTMLButtonElement;
   const description = document.createElement("p") as HTMLParagraphElement;
 
   div.setAttribute("class", "product");
@@ -427,12 +570,69 @@ const showProduct = (product: ProductModel) => {
     showHome();
   });
 
+  const cart = new Cart();
+  const cartProduct = await cart.checkExists(product.id!);
+
+  if (!cartProduct) {
+    const cartButton = document.createElement("button") as HTMLButtonElement;
+    cartButton.setAttribute("class", "add-cart-button");
+    cartButton.textContent = "Add to Cart";
+
+    cartButton.addEventListener("click", async () => {
+      const result: boolean = await cart.addProduct(product);
+      if (result) {
+        const feedbackDiv = document.createElement("div") as HTMLDivElement;
+        const feedbackText = document.createElement(
+          "p"
+        ) as HTMLParagraphElement;
+
+        feedbackDiv.setAttribute("class", "feedback");
+        feedbackText.textContent = "Product successfully added to cart";
+        feedbackDiv.appendChild(feedbackText);
+        header?.appendChild(feedbackDiv);
+        setTimeout(() => {
+          header?.removeChild(feedbackDiv);
+        }, 2000);
+      }
+    });
+    cartDiv.appendChild(cartButton);
+  } else {
+    const cartAddBtn = document.createElement("button") as HTMLButtonElement;
+    const cartSubBtn = document.createElement("button") as HTMLButtonElement;
+    const quantity = document.createElement("h4") as HTMLHeadingElement;
+
+    cartDiv.setAttribute("class", "cart-modify");
+
+    cartAddBtn.textContent = "+";
+    cartSubBtn.textContent = "-";
+    quantity.textContent = cartProduct.quantity.toString();
+
+    cartAddBtn.addEventListener("click", async () => {
+      const result = await cart.incrementProduct(cartProduct.productId);
+      if (result) {
+        quantity.textContent = (cartProduct.quantity + 1).toString();
+      }
+    });
+
+    cartSubBtn.addEventListener("click", async () => {
+      const result = await cart.decrementProduct(cartProduct.productId);
+      if (result) {
+        quantity.textContent = (cartProduct.quantity - 1).toString();
+      }
+    });
+
+    cartDiv.appendChild(cartSubBtn);
+    cartDiv.appendChild(quantity);
+    cartDiv.appendChild(cartAddBtn);
+  }
+
   backBtn.appendChild(backImg);
   div.appendChild(backBtn);
   div.appendChild(image);
   div.appendChild(name);
   div.appendChild(price);
   div.appendChild(category);
+  div.appendChild(cartDiv);
   div.appendChild(description);
   home?.appendChild(div);
 };
@@ -480,6 +680,101 @@ const showProducts = async () => {
   home?.appendChild(productsDiv);
 };
 
+const createCartProductCard = (product: CartProductModel) => {
+  const div = document.createElement("div") as HTMLDivElement;
+  const details = document.createElement("div") as HTMLDivElement;
+  const image = document.createElement("img") as HTMLImageElement;
+  const name = document.createElement("h2") as HTMLHeadingElement;
+  const price = document.createElement("h3") as HTMLHeadingElement;
+  const actions = document.createElement("div") as HTMLDivElement;
+  const removeBtn = document.createElement("button") as HTMLButtonElement;
+  const quantity = document.createElement("h4") as HTMLHeadingElement;
+  const modQuantity = document.createElement("div") as HTMLDivElement;
+  const addBtn = document.createElement("button") as HTMLButtonElement;
+  const subBtn = document.createElement("button") as HTMLButtonElement;
+
+  div.setAttribute("class", "cart-product");
+  image.setAttribute("src", product.imageUrl);
+  image.setAttribute("alt", product.name);
+
+  name.textContent = product.name;
+  price.textContent = "Ksh. " + product.price.toString();
+  quantity.textContent = product.quantity.toString();
+  addBtn.textContent = "+";
+  subBtn.textContent = "-";
+  removeBtn.textContent = "Remove";
+
+  addBtn.addEventListener("click", async () => {
+    const cart = new Cart();
+    const result = await cart.incrementProduct(product.productId);
+    if (result) {
+      quantity.textContent = (product.quantity + 1).toString();
+    }
+  });
+
+  subBtn.addEventListener("click", async () => {
+    const cart = new Cart();
+    const result = await cart.decrementProduct(product.productId);
+    console.log(result);
+    if (result) {
+      quantity.textContent = (product.quantity - 1).toString();
+    }
+  });
+
+  removeBtn.addEventListener("click", async () => {
+    const cart = new Cart();
+    const result = await cart.removeProduct(product.id!);
+  });
+
+  modQuantity.appendChild(subBtn);
+  modQuantity.appendChild(quantity);
+  modQuantity.appendChild(addBtn);
+  details.appendChild(image);
+  details.appendChild(name);
+  details.appendChild(price);
+  actions.appendChild(removeBtn);
+  actions.appendChild(modQuantity);
+  div.appendChild(details);
+  div.appendChild(actions);
+
+  return div;
+};
+
+const createCartCheckout = (
+  products: Array<CartProductModel>
+): HTMLDivElement => {
+  const div = document.createElement("div") as HTMLDivElement;
+  const labeTotal = document.createElement("h2") as HTMLParagraphElement;
+  const total = document.createElement("h2") as HTMLHeadingElement;
+
+  div.setAttribute("class", "cart-checkout");
+  labeTotal.textContent = "Total:";
+  total.textContent =
+    "Ksh. " +
+    products
+      .reduce((acc, curr) => acc + curr.price * curr.quantity, 0)
+      .toString();
+
+  div.appendChild(labeTotal);
+  div.appendChild(total);
+
+  return div;
+};
+
+const showCart = async () => {
+  const cart = new Cart();
+  const products = await cart.getProducts();
+  while (cartSection?.firstElementChild) {
+    cartSection.removeChild(cartSection.firstElementChild);
+  }
+  products.forEach((product) => {
+    const cartProduct = createCartProductCard(product);
+    cartSection?.appendChild(cartProduct);
+  });
+  const cartCheckout = createCartCheckout(products);
+  cartSection?.appendChild(cartCheckout);
+};
+
 const showHome = async () => {
   await showProducts();
 };
@@ -493,6 +788,9 @@ homeBtn?.addEventListener("click", () => {
   while (dashboard?.firstElementChild) {
     dashboard.removeChild(dashboard.firstElementChild);
   }
+  while (cartSection?.firstElementChild) {
+    cartSection.removeChild(cartSection.firstElementChild);
+  }
   showHome();
 });
 dashboardBtn?.addEventListener("click", () => {
@@ -504,13 +802,32 @@ dashboardBtn?.addEventListener("click", () => {
   while (home?.firstElementChild) {
     home.removeChild(home.firstElementChild);
   }
+  while (cartSection?.firstElementChild) {
+    cartSection.removeChild(cartSection.firstElementChild);
+  }
   showDashBoard();
+});
+cartBtn?.addEventListener("click", () => {
+  if (display === "cart") {
+    return;
+  }
+  display = "cart";
+  localStorage.setItem("display", display);
+  while (home?.firstElementChild) {
+    home.removeChild(home.firstElementChild);
+  }
+  while (dashboard?.firstElementChild) {
+    dashboard.removeChild(dashboard.firstElementChild);
+  }
+  showCart();
 });
 
 if (display === "dashboard") {
   showDashBoard();
 } else if (display === "home") {
   showHome();
+} else if (display === "cart") {
+  showCart();
 }
 
 const showFeedback = async () => {
