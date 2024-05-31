@@ -731,3 +731,15 @@ if (feedback) {
     showFeedback();
     localStorage.removeItem("feedback");
 }
+const updateCartCount = async () => {
+    const cart = new Cart();
+    const products = await cart.getProducts();
+    const cartCount = document.createElement("h3");
+    const cartQuantity = products.reduce((acc, curr) => acc + curr.quantity, 0);
+    cartCount.textContent = `Cart (${cartQuantity})`;
+    while (cartBtn?.firstElementChild) {
+        cartBtn.removeChild(cartBtn.firstElementChild);
+    }
+    cartBtn?.appendChild(cartCount);
+};
+updateCartCount();
