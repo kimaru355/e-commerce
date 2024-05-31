@@ -213,11 +213,25 @@ header a {
   color: white;
   padding: 1rem 0.5rem;
 }
+#cart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 2rem;
+  background-color: #f1f1f2;
+}
+.cart-product {
+  background-color: white;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 .cart-product button {
   padding: 0.2rem 1rem;
   background-color: #e07e1b;
 }
-.cart-product button:first-child {
+.cart-product > div > button:first-child {
   background-color: rgba(185, 17, 17, 0.8);
 }
 .cart-product > div:first-child {

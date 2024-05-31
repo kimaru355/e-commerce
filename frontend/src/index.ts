@@ -51,6 +51,22 @@ interface CartProductsModel {
   removeProduct: (id: string) => Promise<boolean>;
 }
 
+const formatPrice = (price: number): string => {
+  const priceStr = price.toString();
+  const priceArr = priceStr.split("");
+  let formattedPrice = "";
+  let counter = 0;
+  for (let i = priceArr.length - 1; i >= 0; i--) {
+    if (counter === 3) {
+      formattedPrice = "," + formattedPrice;
+      counter = 0;
+    }
+    formattedPrice = priceArr[i] + formattedPrice;
+    counter++;
+  }
+  return "Ksh. " + formattedPrice;
+};
+
 class Products implements ProductsModel {
   products: Array<ProductModel>;
   allProducts: ProductModel[];
@@ -478,7 +494,7 @@ const createManageProductTable = (products: Array<ProductModel>) => {
 
     tdName.textContent = product.name;
     tdCategory.textContent = product.category;
-    tdPrice.textContent = "Ksh. " + product.price.toString();
+    tdPrice.textContent = formatPrice(product.price);
     editButton.textContent = "Edit";
     deleteButton.textContent = "Delete";
 
@@ -542,6 +558,8 @@ const showProduct = async (product: ProductModel) => {
     home.removeChild(home.firstElementChild);
   }
   header?.scrollIntoView();
+  localStorage.setItem("display", "product");
+  localStorage.setItem("product", JSON.stringify(product));
 
   const div = document.createElement("div") as HTMLDivElement;
   const backBtn = document.createElement("button") as HTMLButtonElement;
@@ -559,7 +577,7 @@ const showProduct = async (product: ProductModel) => {
   image.setAttribute("alt", product.name);
 
   name.textContent = product.name;
-  price.textContent = "Ksh. " + product.price.toString();
+  price.textContent = formatPrice(product.price);
   category.textContent = product.category;
   description.textContent = product.description;
 
@@ -649,7 +667,7 @@ const createProductCard = (product: ProductModel) => {
   img.setAttribute("alt", product.name);
 
   name.textContent = product.name;
-  price.textContent = "Ksh. " + product.price.toString();
+  price.textContent = formatPrice(product.price);
   description.textContent = product.description;
 
   div.addEventListener("click", () => {
@@ -684,7 +702,7 @@ const createCartProductCard = (product: CartProductModel) => {
   const div = document.createElement("div") as HTMLDivElement;
   const details = document.createElement("div") as HTMLDivElement;
   const image = document.createElement("img") as HTMLImageElement;
-  const name = document.createElement("h2") as HTMLHeadingElement;
+  const name = document.createElement("h3") as HTMLHeadingElement;
   const price = document.createElement("h3") as HTMLHeadingElement;
   const actions = document.createElement("div") as HTMLDivElement;
   const removeBtn = document.createElement("button") as HTMLButtonElement;
@@ -698,7 +716,7 @@ const createCartProductCard = (product: CartProductModel) => {
   image.setAttribute("alt", product.name);
 
   name.textContent = product.name;
-  price.textContent = "Ksh. " + product.price.toString();
+  price.textContent = formatPrice(product.price);
   quantity.textContent = product.quantity.toString();
   addBtn.textContent = "+";
   subBtn.textContent = "-";
@@ -749,11 +767,9 @@ const createCartCheckout = (
 
   div.setAttribute("class", "cart-checkout");
   labeTotal.textContent = "Total:";
-  total.textContent =
-    "Ksh. " +
-    products
-      .reduce((acc, curr) => acc + curr.price * curr.quantity, 0)
-      .toString();
+  total.textContent = formatPrice(
+    products.reduce((acc, curr) => acc + curr.price * curr.quantity, 0)
+  );
 
   div.appendChild(labeTotal);
   div.appendChild(total);
@@ -828,6 +844,9 @@ if (display === "dashboard") {
   showHome();
 } else if (display === "cart") {
   showCart();
+} else if (display === "product") {
+  const product = JSON.parse(localStorage.getItem("product")!);
+  showProduct(product);
 }
 
 const showFeedback = async () => {

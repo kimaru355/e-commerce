@@ -13,6 +13,21 @@ if (!display) {
     display = "home";
     localStorage.setItem("display", display);
 }
+const formatPrice = (price) => {
+    const priceStr = price.toString();
+    const priceArr = priceStr.split("");
+    let formattedPrice = "";
+    let counter = 0;
+    for (let i = priceArr.length - 1; i >= 0; i--) {
+        if (counter === 3) {
+            formattedPrice = "," + formattedPrice;
+            counter = 0;
+        }
+        formattedPrice = priceArr[i] + formattedPrice;
+        counter++;
+    }
+    return "Ksh. " + formattedPrice;
+};
 class Products {
     products;
     allProducts;
@@ -396,7 +411,7 @@ const createManageProductTable = (products) => {
         deleteButton.setAttribute("class", "delete");
         tdName.textContent = product.name;
         tdCategory.textContent = product.category;
-        tdPrice.textContent = "Ksh. " + product.price.toString();
+        tdPrice.textContent = formatPrice(product.price);
         editButton.textContent = "Edit";
         deleteButton.textContent = "Delete";
         editButton.addEventListener("click", () => {
@@ -448,6 +463,8 @@ const showProduct = async (product) => {
         home.removeChild(home.firstElementChild);
     }
     header?.scrollIntoView();
+    localStorage.setItem("display", "product");
+    localStorage.setItem("product", JSON.stringify(product));
     const div = document.createElement("div");
     const backBtn = document.createElement("button");
     const backImg = document.createElement("img");
@@ -462,7 +479,7 @@ const showProduct = async (product) => {
     image.setAttribute("src", product.imageUrl);
     image.setAttribute("alt", product.name);
     name.textContent = product.name;
-    price.textContent = "Ksh. " + product.price.toString();
+    price.textContent = formatPrice(product.price);
     category.textContent = product.category;
     description.textContent = product.description;
     backBtn.addEventListener("click", () => {
@@ -537,7 +554,7 @@ const createProductCard = (product) => {
     img.setAttribute("src", product.imageUrl);
     img.setAttribute("alt", product.name);
     name.textContent = product.name;
-    price.textContent = "Ksh. " + product.price.toString();
+    price.textContent = formatPrice(product.price);
     description.textContent = product.description;
     div.addEventListener("click", () => {
         showProduct(product);
@@ -567,7 +584,7 @@ const createCartProductCard = (product) => {
     const div = document.createElement("div");
     const details = document.createElement("div");
     const image = document.createElement("img");
-    const name = document.createElement("h2");
+    const name = document.createElement("h3");
     const price = document.createElement("h3");
     const actions = document.createElement("div");
     const removeBtn = document.createElement("button");
@@ -579,7 +596,7 @@ const createCartProductCard = (product) => {
     image.setAttribute("src", product.imageUrl);
     image.setAttribute("alt", product.name);
     name.textContent = product.name;
-    price.textContent = "Ksh. " + product.price.toString();
+    price.textContent = formatPrice(product.price);
     quantity.textContent = product.quantity.toString();
     addBtn.textContent = "+";
     subBtn.textContent = "-";
@@ -621,11 +638,7 @@ const createCartCheckout = (products) => {
     const total = document.createElement("h2");
     div.setAttribute("class", "cart-checkout");
     labeTotal.textContent = "Total:";
-    total.textContent =
-        "Ksh. " +
-            products
-                .reduce((acc, curr) => acc + curr.price * curr.quantity, 0)
-                .toString();
+    total.textContent = formatPrice(products.reduce((acc, curr) => acc + curr.price * curr.quantity, 0));
     div.appendChild(labeTotal);
     div.appendChild(total);
     return div;
@@ -696,6 +709,10 @@ else if (display === "home") {
 }
 else if (display === "cart") {
     showCart();
+}
+else if (display === "product") {
+    const product = JSON.parse(localStorage.getItem("product"));
+    showProduct(product);
 }
 const showFeedback = async () => {
     setTimeout(() => {
